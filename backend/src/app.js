@@ -9,6 +9,7 @@ import rateLimit from "express-rate-limit";
 
 import authRoutes from "./modules/auth/auth.routes.js";
 import adminOperationsRoutes from "./modules/admin/admin.operations.routes.js";
+import { listPublicBooks } from "./modules/admin/admin.operations.controller.js";
 
 const app = express();
 const backendDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -53,6 +54,7 @@ app.use("/api/v1/admin/login", rateLimit({
 
 app.use("/api/v1/admin", adminOperationsRoutes);
 app.use("/api/v1/admin", authRoutes);
+app.get("/api/v1/books", listPublicBooks);
 
 app.get("/api/v1/health", (req, res) => {
     res.json({

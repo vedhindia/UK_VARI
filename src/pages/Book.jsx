@@ -1,5 +1,6 @@
-import React from "react";
-import book from "../assets/vithobabook.png"; // replace with your actual image path
+import { useEffect, useState } from "react";
+import bookCoverFallback from "../assets/vithobabook.png";
+import { bookAssetUrl, fetchBooks } from "../services/bookApi";
 
 
 /* ---- Inline icons ---- */
@@ -27,11 +28,32 @@ const checklistItems = [
 ];
 
 export default function Book() {
+  const [book, setBook] = useState(null);
+  const [booksError, setBooksError] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchBooks({ signal: controller.signal })
+      .then((books) => {
+        setBook(books[0] || null);
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setBooksError(error.message);
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  const coverImage = book?.cover_image_url || book?.image_urls?.[0];
+
   return (
     <section className="book-section mt-5">
       <div className="book-content">
         <p className="book-eyebrow">The Book</p>
-        <h2 className="book-title">Vithoba in London</h2>
+        <h2 className="book-title">{book?.title || "Vithoba in London"}</h2>
         <p className="book-subtitle">A Journey of Faith &amp; Discovery</p>
 
         <div className="book-divider">
@@ -41,10 +63,10 @@ export default function Book() {
         </div>
 
         <p className="book-desc">
-          A true story of devotion, the discovery of the Vithoba idol
-          template in London, and the incredible journey by car from
-          Paduka, Pune to London.
+          {book?.description || "A true story of devotion, the discovery of the Vithoba idol template in London, and the incredible journey by car from Paduka, Pune to London."}
         </p>
+
+        {booksError && <p className="book-desc" role="alert">{booksError}</p>}
 
         <ul className="book-checklist">
           {checklistItems.map((item, i) => (
@@ -59,7 +81,11 @@ export default function Book() {
       </div>
 
      <section>
-       < img src={book} alt="Vithoba in London Book Cover" className="book-image" />
+       <img
+         src={coverImage ? bookAssetUrl(coverImage) : bookCoverFallback}
+         alt={`${book?.title || "Vithoba in London"} Book Cover`}
+         className="book-image"
+       />
      </section>
     </section>
   );

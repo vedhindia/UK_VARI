@@ -98,6 +98,20 @@ export const listBooks = async (_req, res) => {
     }
 };
 
+export const listPublicBooks = async (_req, res) => {
+    try {
+        const rows = await sequelize.query(
+            "SELECT id, title, author, category, description, price, stock_quantity, cover_image_url, images FROM books WHERE status = 'active' ORDER BY created_at DESC, id DESC",
+            { type: QueryTypes.SELECT }
+        );
+        return res.json({ success: true, books: rows.map(serializeBook) });
+    } catch (error) {
+        const schemaError = sendBookImagesColumnError(res, error);
+        if (schemaError) return schemaError;
+        return sendError(res, error, "Unable to load books.");
+    }
+};
+
 export const getBook = async (req, res) => {
     try {
         const book = await getById(

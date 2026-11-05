@@ -13,6 +13,7 @@ import {
 import { Link } from "react-router-dom";
 
 import { useAdmin } from "../context/AdminContext";
+import { useAdminToast } from "../context/AdminToastContext";
 
 import StatCard from "../components/StatCard";
 import { adminApi } from "../services/adminApi";
@@ -20,8 +21,8 @@ import { adminApi } from "../services/adminApi";
 const AdminDashboard = () => {
 
     const { admin } = useAdmin();
+    const showToast = useAdminToast();
     const [summary, setSummary] = useState(null);
-    const [summaryError, setSummaryError] = useState("");
 
     useEffect(() => {
         const loadSummary = async () => {
@@ -29,12 +30,12 @@ const AdminDashboard = () => {
                 const response = await adminApi("/admin/summary");
                 setSummary(response.summary);
             } catch (error) {
-                setSummaryError(error.message);
+                showToast(error.message, "error");
             }
         };
 
         loadSummary();
-    }, []);
+    }, [showToast]);
 
     const numberValue = (value) => value == null
         ? "—"
@@ -163,12 +164,6 @@ const AdminDashboard = () => {
                 </div>
 
             </div>
-
-            {summaryError && (
-                <div className="admin-error dashboard-summary-error" role="alert">
-                    {summaryError}
-                </div>
-            )}
 
             <div className="stats-grid">
 

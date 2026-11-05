@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { useAdmin } from "../context/AdminContext";
+import { useAdminToast } from "../context/AdminToastContext";
 
 
 const AdminLogin = () => {
@@ -28,6 +29,7 @@ const AdminLogin = () => {
         login,
         loading
     } = useAdmin();
+    const showToast = useAdminToast();
 
 
     // ======================================
@@ -51,8 +53,6 @@ const AdminLogin = () => {
     // ======================================
     // LOGIN STATES
     // ======================================
-
-    const [error, setError] = useState("");
 
     const [submitting, setSubmitting] = useState(false);
 
@@ -110,17 +110,13 @@ const AdminLogin = () => {
             return;
         }
 
-        // Reset previous error
-
-        setError("");
-
         // Validate input
 
         const normalizedEmail = email.trim().toLowerCase();
 
         if (!normalizedEmail || !password) {
 
-            setError("Please enter your email address and password.");
+            showToast("Please enter your email address and password.", "error");
 
             return;
 
@@ -136,6 +132,7 @@ const AdminLogin = () => {
                 normalizedEmail,
                 password
             );
+            showToast("Signed in successfully.", "success");
 
             // Redirect after successful login
 
@@ -147,9 +144,10 @@ const AdminLogin = () => {
 
             console.error("Admin Login Error:", err);
 
-            setError(
+            showToast(
                 err?.message ||
-                "Login failed. Please check your email and password."
+                "Login failed. Please check your email and password.",
+                "error"
             );
 
         } finally {
@@ -238,7 +236,6 @@ const AdminLogin = () => {
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
-                                    setError("");
                                 }}
                                 autoComplete="username"
                                 required
@@ -277,7 +274,6 @@ const AdminLogin = () => {
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
-                                    setError("");
                                 }}
                                 autoComplete="current-password"
                                 required
@@ -316,23 +312,6 @@ const AdminLogin = () => {
                         </div>
 
                     </div>
-
-
-                    {/* ERROR MESSAGE */}
-
-                    {error && (
-
-                        <div
-                            className="login-error"
-                            role="alert"
-                            aria-live="polite"
-                        >
-
-                            {error}
-
-                        </div>
-
-                    )}
 
 
                     {/* SUBMIT BUTTON */}

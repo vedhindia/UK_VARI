@@ -18,6 +18,7 @@ import {
     Trash2
 } from "lucide-react";
 import { adminApi, adminAssetUrl } from "../services/adminApi";
+import { useAdminToast } from "../context/AdminToastContext";
 
 const resources = {
     books: {
@@ -200,6 +201,7 @@ function emptyForm(fields) {
 const AdminManagementPage = ({ resource }) => {
     const config = resources[resource];
     const isSettings = resource === "settings";
+    const showToast = useAdminToast();
     const [items, setItems] = useState([]);
     const [settings, setSettings] = useState(null);
     const [form, setForm] = useState({});
@@ -210,13 +212,10 @@ const AdminManagementPage = ({ resource }) => {
     const [loadingBookImages, setLoadingBookImages] = useState(false);
     const [viewingBook, setViewingBook] = useState(null);
     const [loadingBookDetails, setLoadingBookDetails] = useState(false);
-    const [bookDetailsError, setBookDetailsError] = useState("");
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState("");
-    const [notice, setNotice] = useState("");
     const Icon = isSettings ? Settings : config?.icon;
 
     const clearPendingImages = () => {
@@ -224,9 +223,8 @@ const AdminManagementPage = ({ resource }) => {
         setPendingImages([]);
     };
 
-    const loadData = useCallback(async () => {
+    const loadData = useCallback(async (notifyOnSuccess = false) => {
         setLoading(true);
-        setError("");
 
         try {
             const response = await adminApi(isSettings ? "/admin/settings" : config.endpoint);
@@ -236,12 +234,13 @@ const AdminManagementPage = ({ resource }) => {
             } else {
                 setItems(response[config.dataKey]);
             }
+            if (notifyOnSuccess) showToast(`${config.title} refreshed.`);
         } catch (requestError) {
-            setError(requestError.message);
+            showToast(requestError.message, "error");
         } finally {
             setLoading(false);
         }
-    }, [config, isSettings]);
+    }, [config, isSettings, showToast]);
 
     useEffect(() => {
         loadData();
@@ -267,16 +266,13 @@ const AdminManagementPage = ({ resource }) => {
         setForm(item
             ? Object.fromEntries(fields.map(({ name }) => [name, item[name] ?? ""]))
             : emptyForm(fields));
-        setError("");
-        setNotice("");
-
         if (resource === "books" && item) {
             setLoadingBookImages(true);
             try {
                 const response = await adminApi(`${config.endpoint}/${item.id}/images`);
                 setBookImages(response.images);
             } catch (requestError) {
-                setError(requestError.message);
+                showToast(requestError.message, "error");
             } finally {
                 setLoadingBookImages(false);
             }
@@ -285,13 +281,12 @@ const AdminManagementPage = ({ resource }) => {
 
     const openBookDetails = async (item) => {
         setViewingBook(null);
-        setBookDetailsError("");
         setLoadingBookDetails(true);
         try {
             const response = await adminApi(`${config.endpoint}/${item.id}`);
             setViewingBook(response.book);
         } catch (requestError) {
-            setBookDetailsError(requestError.message);
+            showToast(requestError.message, "error");
         } finally {
             setLoadingBookDetails(false);
         }
@@ -299,7 +294,6 @@ const AdminManagementPage = ({ resource }) => {
 
     const closeBookDetails = () => {
         setViewingBook(null);
-        setBookDetailsError("");
     };
 
     const closeEditor = () => {
@@ -307,7 +301,6 @@ const AdminManagementPage = ({ resource }) => {
         setBookImages([]);
         setEditorOpen(false);
         setEditing(null);
-        setError("");
     };
 
     const handleBookImageSelection = (event) => {
@@ -334,11 +327,9 @@ const AdminManagementPage = ({ resource }) => {
         }));
 
         if (rejectedFiles.length) {
-            setError(`Unsupported or oversized image(s): ${rejectedFiles.join(", ")}. Choose JPEG, PNG, WebP, or GIF files up to 5 MB each.`);
+            showToast(`Unsupported or oversized image(s): ${rejectedFiles.join(", ")}. Choose JPEG, PNG, WebP, or GIF files up to 5 MB each.`, "error");
         } else if (acceptedFiles.length > availableSlots) {
-            setError(`You can upload up to ${MAX_BOOK_IMAGES} images at a time.`);
-        } else {
-            setError("");
+            showToast(`You can upload up to ${MAX_BOOK_IMAGES} images at a time.`, "error");
         }
 
         if (newImages.length) {
@@ -352,7 +343,6 @@ const AdminManagementPage = ({ resource }) => {
     };
 
     const removeBookImage = async (image) => {
-        setError("");
         try {
             const response = await adminApi(
                 `${config.endpoint}/${editing.id}/images/${image.id}`,
@@ -364,16 +354,15 @@ const AdminManagementPage = ({ resource }) => {
                     ? { ...item, cover_image_url: response.images.find((entry) => entry.is_primary)?.image_url || null }
                     : item
             ));
+            showToast("Book image removed.");
         } catch (requestError) {
-            setError(requestError.message);
+            showToast(requestError.message, "error");
         }
     };
 
     const handleSave = async (event) => {
         event.preventDefault();
         setSaving(true);
-        setError("");
-        setNotice("");
 
         try {
             if (isSettings) {
@@ -389,7 +378,7 @@ const AdminManagementPage = ({ resource }) => {
                 });
                 setSettings(response.settings);
                 setForm(response.settings);
-                setNotice("Store settings saved.");
+                showToast("Store settings saved.");
             } else if (resource === "books") {
                 const payload = config.makePayload(form);
                 const response = await adminApi(
@@ -416,7 +405,7 @@ const AdminManagementPage = ({ resource }) => {
                             ? current.map((item) => item.id === savedBook.id ? savedBook : item)
                             : [savedBook, ...current]);
                         setEditing(savedBook);
-                        setError(`Book details were saved, but the image upload failed: ${uploadError.message} Select Save changes to retry the images.`);
+                        showToast(`Book details were saved, but the image upload failed: ${uploadError.message} Select Save changes to retry the images.`, "warning");
                         return;
                     }
                 }
@@ -424,7 +413,7 @@ const AdminManagementPage = ({ resource }) => {
                 setItems((current) => editing
                     ? current.map((item) => item.id === editing.id ? savedBook : item)
                     : [savedBook, ...current]);
-                setNotice(editing ? "Book updated." : "Book created.");
+                showToast(editing ? "Book updated." : "Book created.");
                 closeEditor();
             } else if (resource === "inventory") {
                 const response = await adminApi(`${config.endpoint}/${editing.book_id}`, {
@@ -437,7 +426,7 @@ const AdminManagementPage = ({ resource }) => {
                 setItems((current) => current.map((item) =>
                     item.book_id === editing.book_id ? response.inventory : item
                 ));
-                setNotice("Inventory updated.");
+                showToast("Inventory updated.");
                 closeEditor();
             } else {
                 const response = await adminApi(`${config.endpoint}/${editing.id}`, {
@@ -448,11 +437,11 @@ const AdminManagementPage = ({ resource }) => {
                 setItems((current) => current.map((item) =>
                     item.id === editing.id ? response[key] : item
                 ));
-                setNotice(resource === "orders" ? "Order status updated." : "Customer status updated.");
+                showToast(resource === "orders" ? "Order status updated." : "Customer status updated.");
                 closeEditor();
             }
         } catch (requestError) {
-            setError(requestError.message);
+            showToast(requestError.message, "error");
         } finally {
             setSaving(false);
         }
@@ -460,16 +449,14 @@ const AdminManagementPage = ({ resource }) => {
 
     const archiveBook = async (book) => {
         if (!window.confirm(`Archive "${book.title}"? It will no longer be active in the catalog.`)) return;
-        setError("");
-        setNotice("");
         try {
             await adminApi(`${config.endpoint}/${book.id}`, { method: "DELETE" });
             setItems((current) => current.map((item) =>
                 item.id === book.id ? { ...item, status: "archived" } : item
             ));
-            setNotice("Book archived.");
+            showToast("Book archived.");
         } catch (requestError) {
-            setError(requestError.message);
+            showToast(requestError.message, "error");
         }
     };
 
@@ -491,14 +478,11 @@ const AdminManagementPage = ({ resource }) => {
                             <Plus size={17} /> Add book
                         </button>
                     )}
-                    <button className="admin-secondary-button" onClick={loadData} disabled={loading} aria-label="Refresh">
+                    <button className="admin-secondary-button" onClick={() => loadData(true)} disabled={loading} aria-label="Refresh">
                         <RefreshCw size={17} /> Refresh
                     </button>
                 </div>
             </div>
-
-            {error && <div className="admin-error" role="alert">{error}</div>}
-            {notice && <div className="admin-success" role="status">{notice}</div>}
 
             {isSettings ? (
                 <form className="admin-form-card settings-form" onSubmit={handleSave}>
@@ -616,7 +600,7 @@ const AdminManagementPage = ({ resource }) => {
                 </div>
             )}
 
-            {(viewingBook || loadingBookDetails || bookDetailsError) && (
+            {(viewingBook || loadingBookDetails) && (
                 <div className="admin-modal-backdrop" onMouseDown={(event) => {
                     if (event.target === event.currentTarget) closeBookDetails();
                 }}>
@@ -634,7 +618,6 @@ const AdminManagementPage = ({ resource }) => {
                             <button type="button" className="admin-icon-button" onClick={closeBookDetails} aria-label="Close book details"><X size={18} /></button>
                         </div>
                         {loadingBookDetails && <div className="admin-loading">Loading book details...</div>}
-                        {bookDetailsError && <div className="admin-error" role="alert">{bookDetailsError}</div>}
                         {viewingBook && (
                             <>
                                 <div className="admin-book-detail-images">
@@ -710,7 +693,6 @@ const AdminManagementPage = ({ resource }) => {
                             </div>
                             <button type="button" className="admin-icon-button" onClick={closeEditor} disabled={saving} aria-label="Close form"><X size={18} /></button>
                         </div>
-                        {error && <div className="admin-error" role="alert">{error}</div>}
                         <div className="admin-form-grid">
                             {config.fields.map((field) => (
                                 <FormField

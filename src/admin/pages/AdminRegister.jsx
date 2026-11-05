@@ -12,10 +12,12 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { adminApi } from "../services/adminApi";
+import { useAdminToast } from "../context/AdminToastContext";
 
 const AdminRegister = () => {
 
     const navigate = useNavigate();
+    const showToast = useAdminToast();
 
     const [formData, setFormData] = useState({
         name: "",
@@ -24,9 +26,6 @@ const AdminRegister = () => {
         password: "",
         confirmPassword: ""
     });
-
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
 
     const [loading, setLoading] = useState(false);
 
@@ -44,16 +43,13 @@ const AdminRegister = () => {
 
         e.preventDefault();
 
-        setError("");
-        setSuccess("");
-
         if (formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match");
+            showToast("Passwords do not match.", "error");
             return;
         }
 
         if (formData.password.length < 12) {
-            setError("Password must contain at least 12 characters");
+            showToast("Password must contain at least 12 characters.", "error");
             return;
         }
 
@@ -76,7 +72,7 @@ const AdminRegister = () => {
                 }
             );
 
-            setSuccess(response.message);
+            showToast(response.message || "Admin account created successfully.");
 
             setFormData({
                 name: "",
@@ -88,7 +84,7 @@ const AdminRegister = () => {
 
         } catch (err) {
 
-            setError(err.message);
+            showToast(err.message, "error");
 
         } finally {
 
@@ -249,20 +245,6 @@ const AdminRegister = () => {
                     </div>
 
                     {/* ERROR */}
-
-                    {error && (
-                        <div className="login-error" role="alert">
-                            {error}
-                        </div>
-                    )}
-
-                    {/* SUCCESS */}
-
-                    {success && (
-                        <div className="register-success" role="status">
-                            {success}
-                        </div>
-                    )}
 
                     <div className="register-actions">
 

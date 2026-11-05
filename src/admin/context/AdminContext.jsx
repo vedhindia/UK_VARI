@@ -3,10 +3,13 @@ import {
     createContext,
     useContext,
     useEffect,
+    useCallback,
     useState
 } from "react";
 
 import { adminApi } from "../services/adminApi";
+import AdminToast from "../components/AdminToast";
+import { AdminToastContext } from "./AdminToastContext";
 
 const AdminContext = createContext(null);
 
@@ -14,6 +17,11 @@ export const AdminProvider = ({ children }) => {
 
     const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState(null);
+    const showToast = useCallback((message, type = "success") => {
+        setToast({ message, type, id: Date.now() });
+    }, []);
+    const dismissToast = useCallback(() => setToast(null), []);
 
     // Check whether admin is already logged in
     const checkAuth = async () => {
@@ -66,17 +74,20 @@ export const AdminProvider = ({ children }) => {
     };
 
     return (
-        <AdminContext.Provider
-            value={{
-                admin,
-                loading,
-                login,
-                logout,
-                checkAuth
-            }}
-        >
-            {children}
-        </AdminContext.Provider>
+        <AdminToastContext.Provider value={showToast}>
+            <AdminContext.Provider
+                value={{
+                    admin,
+                    loading,
+                    login,
+                    logout,
+                    checkAuth
+                }}
+            >
+                {children}
+                <AdminToast toast={toast} onDismiss={dismissToast} />
+            </AdminContext.Provider>
+        </AdminToastContext.Provider>
     );
 };
 
