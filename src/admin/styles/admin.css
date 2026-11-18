@@ -1553,6 +1553,44 @@
     line-height: 1.5;
 }
 
+.login-card .login-success {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #166534;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.login-card .login-success p {
+    margin: 0 0 8px;
+}
+
+.login-forgot-link-row,
+.login-back-link {
+    margin: -7px 0 20px;
+    text-align: right;
+}
+
+.login-back-link {
+    margin: 18px 0 0;
+    text-align: center;
+}
+
+.login-card .login-link {
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.login-card .login-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
 .login-card .login-button {
     width: 100%;
     min-height: 48px;

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import ukLogo from '../assets/UK LOOG.png'
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
 
   const closeMenu = () => setMenuOpen(false)
 
@@ -281,9 +282,13 @@ function Header() {
          
         </nav>
 
-        <a className="vl-cta" href="#buy-custom">
+        <button
+          type="button"
+          className="vl-cta"
+          onClick={() => { closeMenu(); navigate('/Book'); }}
+        >
           Buy Custom
-        </a>
+        </button>
       </header>
     </>
   )

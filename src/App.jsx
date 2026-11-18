@@ -45,6 +45,7 @@ import Footer from './components/Footer';
 
 import Home from './pages/Home';
 import Book from './pages/Book';
+import Checkout from './pages/Checkout';
 import Contact from './pages/Contact';
 
 // Admin context
@@ -52,6 +53,7 @@ import { AdminProvider } from './admin/context/AdminContext';
 
 // Admin pages
 import AdminLogin from './admin/pages/AdminLogin';
+import AdminPasswordReset from './admin/pages/AdminPasswordReset';
 import AdminRegister from './admin/pages/AdminRegister';
 import AdminDashboard from './admin/pages/AdminDashboard';
 import AdminManagementPage from './admin/pages/AdminManagementPage';
@@ -92,6 +94,16 @@ const AdminSection = () => {
                 <Route
                     path="login"
                     element={<AdminLogin />}
+                />
+
+                <Route
+                    path="forgot-password"
+                    element={<AdminPasswordReset />}
+                />
+
+                <Route
+                    path="reset-password"
+                    element={<AdminPasswordReset isReset />}
                 />
 
 
@@ -193,6 +205,13 @@ function App() {
                 <Route
                     path="Book"
                     element={<Book />}
+                />
+
+                {/* Checkout Page */}
+
+                <Route
+                    path="checkout"
+                    element={<Checkout />}
                 />
 
                 {/* Contact Page */}

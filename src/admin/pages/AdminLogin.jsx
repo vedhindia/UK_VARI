@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import {
     Navigate,
+    Link,
     useNavigate
 } from "react-router-dom";
 
@@ -311,6 +312,12 @@ const AdminLogin = () => {
 
                         </div>
 
+                    </div>
+
+                    <div className="login-forgot-link-row">
+                        <Link to="/admin/forgot-password" className="login-link">
+                            Forgot password?
+                        </Link>
                     </div>
 
 

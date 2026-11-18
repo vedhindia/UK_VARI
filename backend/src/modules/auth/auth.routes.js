@@ -5,7 +5,9 @@ import {
     adminLogin,
     adminLogout,
     getAdminProfile,
-    registerAdmin
+    registerAdmin,
+    requestPasswordReset,
+    completePasswordReset
 } from "./auth.controller.js";
 
 import {
@@ -17,6 +19,8 @@ const router = express.Router();
 
 // Public login
 router.post("/login", adminLogin);
+router.post("/password/forgot", requestPasswordReset);
+router.post("/password/reset", completePasswordReset);
 
 // Protected routes
 router.use(verifyAdmin);

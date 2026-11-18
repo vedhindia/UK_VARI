@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import bookCoverFallback from "../assets/vithobabook.png";
 import { bookAssetUrl, fetchBooks } from "../services/bookApi";
 
@@ -28,6 +29,7 @@ const checklistItems = [
 ];
 
 export default function Book() {
+  const navigate = useNavigate();
   const [book, setBook] = useState(null);
   const [booksError, setBooksError] = useState("");
 
@@ -77,7 +79,13 @@ export default function Book() {
           ))}
         </ul>
 
-        <button className="order-btn">Order Your Copy</button>
+        <button
+          className="order-btn"
+          onClick={() => book?.id && navigate(`/checkout?bookId=${book.id}`)}
+          disabled={!book?.id}
+        >
+          Order Your Copy
+        </button>
       </div>
 
      <section>

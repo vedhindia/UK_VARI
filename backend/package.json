@@ -9,7 +9,7 @@
     "create-admin": "node src/scripts/createAdmin.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "",   
   "license": "ISC",
   "description": "",
   "dependencies": {
@@ -24,6 +24,7 @@
     "morgan": "^1.12.1",
     "multer": "^2.5.0",
     "mysql2": "^3.24.6",
+    "nodemailer": "^10.6.0",
     "razorpay": "^2.9.8",
     "sequelize": "^6.37.8",
     "winston": "^3.19.0",

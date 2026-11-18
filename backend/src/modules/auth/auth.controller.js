@@ -4,6 +4,10 @@ import bcrypt from "bcryptjs";
 import Admin from "./admin.model.js";
 
 import { loginAdmin } from "./auth.service.js";
+import {
+    requestAdminPasswordReset,
+    resetAdminPassword
+} from "./passwordReset.service.js";
 
 // Cookie configuration
 const cookieOptions = {
@@ -57,6 +61,70 @@ export const adminLogin = async (req, res) => {
         return res.status(401).json({
             success: false,
             message: error.message
+        });
+    }
+};
+
+export const requestPasswordReset = async (req, res) => {
+    const { email } = req.body || {};
+
+    if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        return res.status(400).json({
+            success: false,
+            message: "Please enter a valid email address"
+        });
+    }
+
+    try {
+        await requestAdminPasswordReset(email);
+        return res.status(202).json({
+            success: true,
+            message: "If an active admin account matches that email, password reset instructions will be sent."
+        });
+    } catch (error) {
+        console.error("ADMIN PASSWORD RESET REQUEST ERROR:", error.message);
+        return res.status(503).json({
+            success: false,
+            message: "Password reset email service is unavailable. Please try again later."
+        });
+    }
+};
+
+export const completePasswordReset = async (req, res) => {
+    const { token, password } = req.body || {};
+
+    if (typeof token !== "string" || !token || typeof password !== "string") {
+        return res.status(400).json({
+            success: false,
+            message: "A reset token and new password are required"
+        });
+    }
+
+    if (password.length < 12) {
+        return res.status(400).json({
+            success: false,
+            message: "Password must contain at least 12 characters"
+        });
+    }
+
+    try {
+        const wasReset = await resetAdminPassword(token, password);
+        if (!wasReset) {
+            return res.status(400).json({
+                success: false,
+                message: "This password reset link is invalid or has expired. Please request a new one."
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated. You can now sign in with your new password."
+        });
+    } catch (error) {
+        console.error("ADMIN PASSWORD RESET ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to reset the password right now. Please try again later."
         });
     }
 };
